@@ -1,2 +1,3 @@
 name,studentNumber,groupName,githubUsername,portfolioUrl
 Katare Nderura,225128306,SyntaxCrew,Tare2006,https://github.com/Tare2006
+Gehas NA Iimene,224134949,SyntaxCrew,PoHaMbA_05,https://github.com/gehasiimene-cpu
