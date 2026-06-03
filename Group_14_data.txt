@@ -1,0 +1,2 @@
+name,studentNumber,groupName,githubUsername,portfolioUrl
+Katare Nderura,225128306,Group 14, Tare2006,https://github.com/Tare2006
