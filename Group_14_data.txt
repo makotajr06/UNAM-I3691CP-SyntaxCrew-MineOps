@@ -13,5 +13,5 @@ Amwaama Ek 224086766, Syntaxcrew
 Hangula GN 224066404, Syntaxcrew
 Shatika Titus 224076361, Syntaxcrew,https://github.com/shatika37-coder
 Sheefeni Simon 224064150, Syntaxcrew
-Shevaanyena LH 224080199, Syntaxcrew
+Shevaanyena LH 224080199, Syntaxcrew,Linea-24,https://github.com/Linea-24
 Shimakeleni JN 224120417, Syntaxcrew
