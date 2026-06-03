@@ -2,3 +2,4 @@ name,studentNumber,groupName,githubUsername,portfolioUrl
 Katare Nderura,225128306,SyntaxCrew,Tare2006,https://github.com/Tare2006
 Gehas NA Iimene,224134949,SyntaxCrew,PoHaMbA_05,https://github.com/gehasiimene-cpu
 Eliser Katondoka, 224082272, syntaxCrew,eliaserk, https://github.com/eliaserk
+Ndapandula Gulikua, 225142384,SyntaxCrew,Gulikua26,https://github.com/Gulikua26
