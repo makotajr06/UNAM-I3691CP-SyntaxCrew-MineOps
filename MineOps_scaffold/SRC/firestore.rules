@@ -1,0 +1,231 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function currentUser() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function currentRole() {
+      return signedIn() && currentUser().data.role is string
+        ? currentUser().data.role
+        : "worker";
+    }
+
+    function isAdmin() {
+      return signedIn() && currentRole() == "admin";
+    }
+
+    function isSupervisor() {
+      return signedIn() && (currentRole() in ["supervisor", "shift_leader", "safety_officer", "admin"]);
+    }
+
+    function isWorker() {
+      return signedIn() && (currentRole() in ["worker", "supervisor", "shift_leader", "safety_officer", "fleet", "compliance", "admin"]);
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function validStatus() {
+      return !("status" in request.resource.data)
+        || request.resource.data.status in ["active", "pending", "acknowledged", "resolved", "closed", "offline", "break", "pass", "fail", "draft", "exported", "search_rescue", "investigation_required"];
+    }
+
+    function validSeverity() {
+      return !("severity" in request.resource.data)
+        || request.resource.data.severity in ["low", "medium", "high", "critical"];
+    }
+
+    match /users/{userId} {
+      allow read: if signedIn() && (request.auth.uid == userId || isSupervisor());
+      allow create: if signedIn()
+        && (request.auth.uid == userId || isAdmin())
+        && hasRequiredFields(["displayName", "role", "createdAt"])
+        && request.resource.data.role in ["worker", "supervisor", "shift_leader", "safety_officer", "fleet", "compliance", "admin"];
+      allow update: if signedIn()
+        && (
+          (request.auth.uid == userId && !("role" in request.resource.data.diff(resource.data).changedKeys()))
+          || isAdmin()
+        );
+      allow delete: if isAdmin();
+
+      match /settings/{settingId} {
+        allow read, write: if signedIn() && (request.auth.uid == userId || isAdmin());
+      }
+
+      match /notifications/{notificationId} {
+        allow read, update, delete: if signedIn() && (request.auth.uid == userId || isAdmin());
+        allow create: if signedIn();
+      }
+
+      match /reminders/{reminderId} {
+        allow read, write: if signedIn() && (request.auth.uid == userId || isAdmin());
+      }
+    }
+
+    match /zones/{zoneId} {
+      allow read: if isWorker();
+      allow create, update, delete: if isSupervisor();
+    }
+
+    match /shifts/{shiftId} {
+      allow read: if isWorker();
+      allow create: if isWorker()
+        && hasRequiredFields(["shiftName", "zone", "status", "startsAt", "createdAt"]);
+      allow update: if isWorker() && validStatus();
+      allow delete: if isAdmin();
+
+      match /handovers/{handoverId} {
+        allow read: if isWorker();
+        allow create: if isSupervisor()
+          && hasRequiredFields(["outgoingTeam", "incomingTeam", "hazards", "tasks", "createdAt"]);
+        allow update: if isSupervisor() && validStatus();
+        allow delete: if isAdmin();
+      }
+    }
+
+    match /hazards/{hazardId} {
+      allow read: if isWorker();
+      allow create: if isWorker()
+        && hasRequiredFields(["type", "zone", "severity", "description", "status", "reportedBy", "createdAt"])
+        && validSeverity()
+        && validStatus();
+      allow update: if isWorker() && validSeverity() && validStatus();
+      allow delete: if isSupervisor();
+
+      match /acknowledgements/{ackId} {
+        allow read: if isWorker();
+        allow create, update: if signedIn() && request.auth.uid == ackId;
+        allow delete: if isSupervisor();
+      }
+    }
+
+    match /alerts/{alertId} {
+      allow read: if isWorker();
+      allow create: if isWorker()
+        && hasRequiredFields(["title", "message", "severity", "status", "createdAt"])
+        && validSeverity()
+        && validStatus();
+      allow update: if isWorker() && validStatus();
+      allow delete: if isSupervisor();
+
+      match /acknowledgements/{ackId} {
+        allow read: if isWorker();
+        allow create, update: if signedIn() && request.auth.uid == ackId;
+        allow delete: if isSupervisor();
+      }
+    }
+
+    match /sosEvents/{eventId} {
+      allow read: if isWorker();
+      allow create: if isWorker()
+        && hasRequiredFields(["status", "shiftId", "zone", "startedBy", "gps", "roster", "createdAt"])
+        && validStatus();
+      allow update: if isWorker()
+        && validStatus()
+        && (
+          !request.resource.data.diff(resource.data).changedKeys().hasAny(["status", "resolvedBy", "resolvedAt"])
+          || isSupervisor()
+        );
+      allow delete: if isSupervisor();
+
+      match /responses/{responseId} {
+        allow read: if isWorker();
+        allow create, update: if signedIn() && request.auth.uid == responseId;
+        allow delete: if isSupervisor();
+      }
+    }
+
+    match /incidents/{incidentId} {
+      allow read: if isWorker();
+      allow create, update: if isSupervisor()
+        && hasRequiredFields(["type", "sosEventId", "status", "createdAt"])
+        && validStatus();
+      allow delete: if isAdmin();
+    }
+
+    match /emergencyReports/{reportId} {
+      allow read: if isWorker();
+      allow create, update: if isSupervisor()
+        && hasRequiredFields(["type", "sosEventId", "createdAt"]);
+      allow delete: if isAdmin();
+    }
+
+    match /pushNotifications/{notificationId} {
+      allow read: if isSupervisor();
+      allow create: if isWorker()
+        && hasRequiredFields(["title", "message", "type", "target", "createdAt"]);
+      allow update, delete: if isSupervisor();
+    }
+
+    match /handoverIssues/{issueId} {
+      allow read: if isWorker();
+      allow create: if isSupervisor()
+        && hasRequiredFields(["message", "severity", "status", "flaggedBy", "createdAt"])
+        && validSeverity()
+        && validStatus();
+      allow update, delete: if isSupervisor() && validStatus();
+    }
+
+    match /inspections/{inspectionId} {
+      allow read: if isWorker();
+      allow create: if isWorker()
+        && hasRequiredFields(["zone", "inspectorId", "status", "checks", "createdAt"])
+        && validStatus();
+      allow update: if isWorker() && validStatus();
+      allow delete: if isSupervisor();
+
+      match /acknowledgements/{ackId} {
+        allow read: if isWorker();
+        allow create, update: if signedIn() && request.auth.uid == ackId;
+        allow delete: if isSupervisor();
+      }
+    }
+
+    match /machines/{machineId} {
+      allow read: if isWorker();
+      allow create, update: if isSupervisor()
+        && hasRequiredFields(["name", "type", "status", "zone", "updatedAt"])
+        && validStatus();
+      allow delete: if isAdmin();
+
+      match /maintenanceLogs/{logId} {
+        allow read: if isWorker();
+        allow create, update: if isSupervisor()
+          && hasRequiredFields(["machineId", "type", "status", "notes", "createdAt"])
+          && validStatus();
+        allow delete: if isAdmin();
+      }
+    }
+
+    match /locations/{locationId} {
+      allow read: if isWorker();
+      allow create, update: if signedIn()
+        && (request.auth.uid == locationId || isSupervisor())
+        && hasRequiredFields(["userId", "zone", "updatedAt"]);
+      allow delete: if isSupervisor();
+    }
+
+    match /reports/{reportId} {
+      allow read: if isWorker();
+      allow create: if isWorker() && hasRequiredFields(["type", "createdBy", "createdAt"]);
+      allow update: if isWorker() && validStatus();
+      allow delete: if isSupervisor();
+    }
+
+    match /appConfig/{configId} {
+      allow read: if isWorker();
+      allow write: if isAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
