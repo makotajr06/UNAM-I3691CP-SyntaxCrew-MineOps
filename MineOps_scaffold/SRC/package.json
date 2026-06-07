@@ -1,0 +1,25 @@
+{
+  "name": "mineops",
+  "version": "1.0.0",
+  "private": true,
+  "main": "node_modules/expo/AppEntry.js",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "web": "expo start --web",
+    "seed:firestore": "node scripts/seedFirestore.mjs",
+    "promote:supervisor": "node scripts/promoteSupervisor.mjs"
+  },
+  "dependencies": {
+    "@expo/vector-icons": "^15.1.1",
+    "expo": "~55.0.6",
+    "expo-image-picker": "~55.0.20",
+    "expo-location": "~55.1.10",
+    "firebase": "12.12.1",
+    "react": "19.2.0",
+    "react-dom": "^19.2.0",
+    "react-native": "^0.83.6",
+    "react-native-web": "^0.21.0"
+  }
+}
