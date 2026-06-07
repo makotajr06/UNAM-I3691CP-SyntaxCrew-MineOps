@@ -1,0 +1,50 @@
+{
+  "expo": {
+    "name": "MineOps",
+    "slug": "mineops",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/branding/app-icon.png",
+    "userInterfaceStyle": "light",
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
+    "splash": {
+      "image": "./assets/branding/splash-logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FB9800"
+    },
+    "android": {
+      "softwareKeyboardLayoutMode": "resize",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "VIBRATE"
+      ],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/branding/adaptive-icon.png",
+        "backgroundColor": "#FB9800"
+      },
+      "package": "com.eliaserk.mineops"
+    },
+    "ios": {
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "MineOps uses your location to broadcast exact GPS coordinates during an emergency SOS.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "MineOps uses your location to broadcast exact GPS coordinates during an emergency SOS."
+      }
+    },
+    "web": {
+      "favicon": "./assets/branding/favicon.png"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "77f90172-4e91-4a1f-81fc-85353eaffa9e"
+      }
+    }
+  }
+}
